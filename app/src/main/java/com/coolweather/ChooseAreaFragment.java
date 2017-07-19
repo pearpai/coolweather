@@ -2,6 +2,7 @@ package com.coolweather;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Process;
 import android.support.annotation.Nullable;
@@ -100,7 +101,7 @@ public class ChooseAreaFragment extends Fragment {
         titleText = view.findViewById(R.id.title_text);
         backButton = view.findViewById(R.id.back_button);
         listView = view.findViewById(R.id.list_view);
-        adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, dataList);
+        adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, dataList);
         listView.setAdapter(adapter);
         return view;
     }
@@ -115,6 +116,22 @@ public class ChooseAreaFragment extends Fragment {
             } else if (currentLevel == LEVEL_CITY) {
                 selectedCity = cityList.get(position);
                 queryCounties();
+            }else if (currentLevel == LEVEL_COUNTY){
+                String weatherId = countyList.get(position).getWeatherId();
+                if (getActivity() instanceof MainActivity){
+                    Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                    intent.putExtra("weather_id", weatherId);
+                    startActivity(intent);
+                    getActivity().finish();
+                }else if (getActivity() instanceof WeatherActivity){
+                    WeatherActivity activity = (WeatherActivity) getActivity();
+                    activity.drawerLayout.closeDrawers();
+                    activity.swipeRefresh.setRefreshing(true);
+                    activity.requestWeather(weatherId);
+                }
+
+
+
             }
         });
         backButton.setOnClickListener(view -> {
@@ -158,9 +175,11 @@ public class ChooseAreaFragment extends Fragment {
 
         if (cityList.size() > 0) {
             dataList.clear();
-            for (City city : cityList) {
-                dataList.add(city.getCityName());
-            }
+            cityList.forEach(city -> dataList.add(city.getCityName()));
+
+//            for (City city : cityList) {
+//                dataList.add(city.getCityName());
+//            }
             adapter.notifyDataSetChanged();
             listView.setSelection(0);
             currentLevel = LEVEL_CITY;
